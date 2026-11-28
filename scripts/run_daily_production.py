@@ -2,13 +2,15 @@
 """
 Slayer Daily Radio Production, QA & Mastering Pipeline
 - Fetches fresh international news from credible RSS feeds
+- Browses live Singapore arts & cultural listings (events, summaries, ticket costs, URLs)
 - Selects 6 legally redistributable CC/PD tracks from Internet Archive (1 per genre, 1.5-12 MB)
-- Generates non-repeating Clinical & Motivational Psychological Reinforcement
+- Generates non-repeating quote-based Clinical & Motivational Psychological Reinforcement
 - Synthesizes UK English speech via Edge TTS (en-GB-RyanNeural, $0/month)
 - Masters audio with FFmpeg (-16 LUFS, smooth fades, 192 kbps MP3, < 95 MB)
 - Verifies output integrity & updates manifest, archive.json, and history_register.json
 """
 import asyncio
+import html
 import json
 import re
 import subprocess
@@ -28,6 +30,7 @@ AUDIO_DIR = ROOT / "audio"
 HISTORY_FILE = DATA_DIR / "history_register.json"
 ARCHIVE_FILE = DATA_DIR / "archive.json"
 VOICE = "en-GB-RyanNeural"
+UA = {"User-Agent": "Mozilla/5.0 (compatible; SlayerRadioBot/1.0)"}
 
 GENRE_QUERIES = [
     ("russian-folk", "Russian Folk", 'collection:(jamendo OR opensource_audio) AND ("russian folk" OR balalaika) AND mediatype:audio'),
@@ -38,25 +41,47 @@ GENRE_QUERIES = [
     ("black-metal", "Black Metal", 'collection:(jamendo OR opensource_audio) AND "black metal" AND mediatype:audio'),
 ]
 
-PSYCH_BANK = [
-    (
-        "ACT & Clinical Formulation Under Uncertainty",
-        "A clinical formulation is a living hypothesis rather than a rigid verdict; tolerating diagnostic ambiguity protects client-centred judgement.",
-        "Separating Professional Performance from Personal Worth",
-        "Difficult sessions or slow client progress reflect the complexity of human suffering rather than a deficit in your clinical worth.",
-    ),
-    (
-        "DBT Dialectics & Therapeutic Boundaries",
-        "Holding acceptance and change simultaneously allows you to validate a client's pain without colluding with avoidance.",
-        "Confidence Without Arrogance",
-        "Eighteen years of clinical pattern recognition is an anchor for steady judgement, even when a case asks you to stay curious and humble.",
-    ),
-    (
-        "Motivational Interviewing & Sustaining Alliance",
-        "Ambivalence is not resistance; it is the natural middle ground where meaningful behavioural change is negotiated.",
-        "Resilience During Demanding Periods",
-        "Stepping back from perfectionism preserves the emotional bandwidth required for sustained, compassionate clinical presence.",
-    ),
+PSYCH_QUOTE_BANK = [
+    {
+        "quote": "Between stimulus and response there is a space. In that space is our power to choose our response. — Viktor Frankl",
+        "clinical_phrase": "When a session feels tense or stuck, you don't have to react to the urgency in the room. Pause in that space—your steadiness is often the most therapeutic intervention you offer.",
+        "motivational_phrase": "You've spent years building the capacity to stay calm where others feel overwhelmed. Trust that hard-earned poise today.",
+    },
+    {
+        "quote": "The curious paradox is that when I accept myself just as I am, then I can change. — Carl Rogers",
+        "clinical_phrase": "Release the pressure to be a flawless clinician in every interaction. Meeting your own limits with honesty models the exact self-acceptance you invite your clients to practice.",
+        "motivational_phrase": "Your effectiveness doesn't come from perfection; it comes from genuine, grounded presence.",
+    },
+    {
+        "quote": "It is the relationship that heals. — Irvin Yalom",
+        "clinical_phrase": "Even when a specific technique stalls, the consistent safety and attunement you provide is actively doing its work beneath the surface.",
+        "motivational_phrase": "You show up day after day as a reliable anchor in other people's hardest chapters. That quiet consistency matters more than any single outcome.",
+    },
+    {
+        "quote": "The goal is not to get rid of all pain, but to live a life worth living alongside it. — Steven Hayes",
+        "clinical_phrase": "You aren't responsible for erasing every distress a client carries; you're helping them build a wider, freer life even while uncertainty remains.",
+        "motivational_phrase": "Let go of carrying your clients' outcomes on your shoulders alone. Walk beside them with clear boundaries and steady confidence.",
+    },
+    {
+        "quote": "Radical acceptance rests on letting go of the illusion of control and a willingness to notice and accept things as they are right now. — Marsha Linehan",
+        "clinical_phrase": "When progress moves slower than you hoped, resist turning that frustration inward. Meet the reality of the case with clear eyes and calm clinical curiosity.",
+        "motivational_phrase": "Slow progress is not failure—it is the honest pace of real human change, and you are equipped to hold it.",
+    },
+    {
+        "quote": "We suffer more often in imagination than in reality. — Seneca",
+        "clinical_phrase": "Notice when anticipatory self-criticism is louder than the actual evidence in front of you. Return to what is observable, concrete, and within your control.",
+        "motivational_phrase": "You have navigated complex clinical and academic demands for nearly two decades. You are far more prepared for today than any passing doubt suggests.",
+    },
+    {
+        "quote": "Do the best you can until you know better. Then when you know better, do better. — Maya Angelou",
+        "clinical_phrase": "Every difficult case refines your judgement. Treat hindsight as clinical data to sharpen your craft, never as fuel for harsh self-judgement.",
+        "motivational_phrase": "Growth at an advanced stage of your career isn't about starting over—it's about trusting your foundation while staying open to learning.",
+    },
+    {
+        "quote": "Live the questions now. Perhaps you will then gradually, without noticing it, live along some distant day into the answer. — Rainer Maria Rilke",
+        "clinical_phrase": "Complex presentations rarely resolve on a neat timetable. Holding ambiguity without rushing to premature certainty is a mark of clinical maturity.",
+        "motivational_phrase": "You don't need every answer before stepping into the room today. Your willingness to listen deeply is already enough.",
+    },
 ]
 
 REFLECTION_BANK = [
@@ -77,6 +102,11 @@ def save_json(path: Path, obj):
     path.write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def clean_html(raw: str) -> str:
+    txt = re.sub(r"<[^>]+>", " ", raw or "")
+    return re.sub(r"\s+", " ", html.unescape(txt)).strip()
+
+
 def fetch_rss_news(used_urls: set) -> list[dict]:
     feeds = [
         ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
@@ -86,13 +116,13 @@ def fetch_rss_news(used_urls: set) -> list[dict]:
     stories = []
     for source_name, url in feeds:
         try:
-            r = requests.get(url, timeout=20)
+            r = requests.get(url, headers=UA, timeout=20)
             r.raise_for_status()
             root = ET.fromstring(r.text)
             for item in root.findall(".//item")[:8]:
-                title = (item.findtext("title") or "").strip()
+                title = clean_html(item.findtext("title") or "")
                 link = (item.findtext("link") or "").strip()
-                desc = re.sub(r"<[^>]+>", "", (item.findtext("description") or "")).strip()
+                desc = clean_html(item.findtext("description") or "")
                 pub = (item.findtext("pubDate") or "").strip()
                 if title and link and link not in used_urls:
                     stories.append({
@@ -111,6 +141,86 @@ def fetch_rss_news(used_urls: set) -> list[dict]:
     return stories[:6]
 
 
+def fetch_singapore_events() -> list[dict]:
+    """Browse live Singapore arts, theatre, concert & exhibition listings with summaries & ticket prices."""
+    events = []
+    try:
+        r = requests.get("https://www.esplanade.com/whats-on", headers=UA, timeout=20)
+        if r.ok:
+            for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>', r.text, re.S):
+                try:
+                    data = json.loads(block)
+                    items = data if isinstance(data, list) else [data]
+                    for obj in items:
+                        if obj.get("@type") in ("Event", "MusicEvent", "TheaterEvent", "ExhibitionEvent"):
+                            name = clean_html(obj.get("name", ""))
+                            desc = clean_html(obj.get("description", ""))[:220]
+                            url = obj.get("url") or "https://www.esplanade.com/whats-on"
+                            offers = obj.get("offers") or {}
+                            if isinstance(offers, list):
+                                offers = offers[0] if offers else {}
+                            price = offers.get("price")
+                            curr = offers.get("priceCurrency", "SGD")
+                            price_str = f"{curr} {price}" if price else "Check Esplanade listing (many free & ticketed)"
+                            if name:
+                                events.append({
+                                    "title": name,
+                                    "summary": desc or "Live arts programme at Esplanade – Theatres on the Bay.",
+                                    "price": price_str,
+                                    "url": url,
+                                    "source": "Esplanade",
+                                })
+                except Exception:
+                    continue
+    except Exception as e:
+        print(f"Esplanade browse warning: {e}")
+
+    try:
+        r = requests.get("https://www.nationalgallery.sg/sg/en/whats-on.html", headers=UA, timeout=20)
+        if r.ok:
+            for m in re.finditer(r'href="(/sg/en/exhibitions/[^"]+\.html)"[^>]*>(.*?)</a>', r.text, re.S):
+                title = clean_html(m.group(2))
+                if len(title) > 6 and not any(e["title"] == title for e in events):
+                    events.append({
+                        "title": title,
+                        "summary": "Exhibition at National Gallery Singapore.",
+                        "price": "Free for Citizens/PRs (Special exhibitions ticketed)",
+                        "url": "https://www.nationalgallery.sg" + m.group(1),
+                        "source": "National Gallery SG",
+                    })
+                if len(events) >= 5:
+                    break
+    except Exception as e:
+        print(f"NGS browse warning: {e}")
+
+    if len(events) < 4:
+        try:
+            rss_url = "https://news.google.com/rss/search?q=Singapore+(concert+OR+exhibition+OR+theatre+OR+festival)+tickets+this+week&hl=en-SG&gl=SG&ceid=SG:en"
+            r = requests.get(rss_url, headers=UA, timeout=20)
+            if r.ok:
+                root = ET.fromstring(r.text)
+                for item in root.findall(".//item")[:8]:
+                    title = clean_html(item.findtext("title") or "")
+                    link = (item.findtext("link") or "").strip()
+                    desc = clean_html(item.findtext("description") or "")[:200]
+                    price_m = re.search(r"(\$\s?\d+(?:\.\d{2})?|SGD\s?\d+|Free\b)", f"{title} {desc}", re.I)
+                    price_str = price_m.group(1) if price_m else "See official event page for ticket pricing"
+                    if title and link and not any(e["title"] == title for e in events):
+                        events.append({
+                            "title": title,
+                            "summary": desc or "Current Singapore cultural or arts event.",
+                            "price": price_str,
+                            "url": link,
+                            "source": "SG Arts Listing",
+                        })
+                    if len(events) >= 5:
+                        break
+        except Exception as e:
+            print(f"SG RSS warning: {e}")
+
+    return events[:5]
+
+
 def fetch_archive_track(genre_slug: str, genre_name: str, query: str, used_ids: set) -> dict:
     url = "https://archive.org/advancedsearch.php"
     params = {
@@ -120,14 +230,14 @@ def fetch_archive_track(genre_slug: str, genre_name: str, query: str, used_ids: 
         "page": 1,
         "output": "json",
     }
-    r = requests.get(url, params=params, timeout=25)
+    r = requests.get(url, params=params, headers=UA, timeout=25)
     r.raise_for_status()
     docs = r.json().get("response", {}).get("docs", [])
     for doc in docs:
         ident = doc.get("identifier")
         if not ident or ident in used_ids:
             continue
-        meta_r = requests.get(f"https://archive.org/metadata/{ident}", timeout=25)
+        meta_r = requests.get(f"https://archive.org/metadata/{ident}", headers=UA, timeout=25)
         if not meta_r.ok:
             continue
         files = meta_r.json().get("files", [])
@@ -189,11 +299,12 @@ def main():
     used_recs = set(history.get("recording_ids", []))
 
     news_items = fetch_rss_news(used_news)
+    sg_events = fetch_singapore_events()
     tracks = [fetch_archive_track(slug, name, q, used_recs) for slug, name, q in GENRE_QUERIES]
 
-    p_idx = history.get("psych_idx", 0) % len(PSYCH_BANK)
+    p_idx = history.get("psych_idx", 0) % len(PSYCH_QUOTE_BANK)
     r_idx = history.get("reflection_idx", 0) % len(REFLECTION_BANK)
-    psych = PSYCH_BANK[p_idx]
+    psych = PSYCH_QUOTE_BANK[p_idx]
     refl = REFLECTION_BANK[r_idx]
 
     work = Path("/tmp/slayer_build") / date_str
@@ -202,16 +313,32 @@ def main():
     news_script = " ".join(
         f"From {n['source']}: {n['title']}. {n['summary']}" for n in news_items
     )
-    intro_text = f"Good morning. This is Slayer, your daily 07:00 Singapore broadcast for {label_str}. Today we cover international developments, six distinct music genres, clinical psychological reinforcement, Singapore arts, and a closing reflection."
-    arts_text = "Turning to Singapore arts and cultural highlights this week. Check current programmes at Esplanade Theatres on the Bay, National Gallery Singapore, Wild Rice at Funan, and SISTIC for live classical, theatre, and visual art exhibitions."
-    psych_text = f"Clinical and personal reinforcement. First, {psych[0]}: {psych[1]} Second, {psych[2]}: {psych[3]}"
+    intro_text = f"Good morning. This is Slayer, your daily 07:00 Singapore broadcast for {label_str}. Today we cover international developments, six distinct music genres, quote-based clinical reinforcement, Singapore arts and cultural events, and a closing reflection."
+
+    if sg_events:
+        arts_script_parts = [
+            f"{ev['title']}: {ev['summary']} Ticket info: {ev['price']}."
+            for ev in sg_events
+        ]
+        arts_text = "Here is what is on in Singapore this week. " + " ".join(arts_script_parts)
+        arts_body = " · ".join(f"{ev['title']} ({ev['price']})" for ev in sg_events)
+        arts_meta = [{"label": ev["source"], "value": f"{ev['title'][:38]} ({ev['price']})", "url": ev["url"]} for ev in sg_events]
+    else:
+        arts_text = "Check current Singapore performances and exhibitions at Esplanade, National Gallery Singapore, and SISTIC."
+        arts_body = arts_text
+        arts_meta = [{"label": "Esplanade", "value": "What's On", "url": "https://www.esplanade.com/whats-on"}]
+
+    psych_text = (
+        f"Personal psychological reinforcement. {psych['quote']} "
+        f"{psych['clinical_phrase']} {psych['motivational_phrase']}"
+    )
     closing_text = f"Closing reflection on {refl[0]}: {refl[1]} Thank you for listening to Slayer. Have a grounded day ahead."
 
     tts_specs = [
         ("intro", "Slayer Opening", "01 · OPENING", "Good Morning — This is Slayer", intro_text, [{"label": "Broadcast", "value": "07:00 SGT"}], "station"),
         ("news", "International News Bulletin", "02 · INTERNATIONAL NEWS", f"{len(news_items)} Verified Stories", news_script, [{"label": n["source"], "value": n["title"][:45], "url": n["url"]} for n in news_items], "news"),
-        ("arts", "Singapore Arts & Cultural Guide", "07 · SINGAPORE ARTS", "Current Exhibitions & Performances", arts_text, [{"label": "Esplanade", "value": "What's On", "url": "https://www.esplanade.com/whats-on"}, {"label": "National Gallery", "value": "Exhibitions", "url": "https://www.nationalgallery.sg/sg/en/whats-on.html"}], "events"),
-        ("psych", "Personal Psychological Reinforcement", "10 · CLINICAL REINFORCEMENT", f"{psych[0]} & {psych[2]}", psych_text, [{"label": "Clinical", "value": psych[0]}, {"label": "Motivational", "value": psych[2]}], "psych"),
+        ("arts", "Singapore Arts & Cultural Guide", "07 · SINGAPORE ARTS", f"{len(sg_events)} Events This Week", arts_body, arts_meta, "events"),
+        ("psych", "Personal Psychological Reinforcement", "10 · CLINICAL & MOTIVATIONAL REINFORCEMENT", psych["quote"], f"{psych['clinical_phrase']} {psych['motivational_phrase']}", [{"label": "Clinical", "value": psych["clinical_phrase"][:65] + "..."}, {"label": "Motivational", "value": psych["motivational_phrase"][:65] + "..."}], "psych"),
         ("closing", "Daily Closing Reflection", "11 · CLOSING REFLECTION", refl[0], closing_text, [{"label": "Theme", "value": refl[0]}], "closing"),
     ]
 
@@ -224,7 +351,7 @@ def main():
     music_files = {}
     for tr in tracks:
         m_p = work / f"music_{tr['genre_slug']}.mp3"
-        r = requests.get(tr["download_url"], timeout=60)
+        r = requests.get(tr["download_url"], headers=UA, timeout=60)
         r.raise_for_status()
         m_p.write_bytes(r.content)
         music_files[tr["genre_slug"]] = m_p
