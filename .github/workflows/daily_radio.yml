@@ -1,0 +1,38 @@
+name: Slayer Daily Radio Production
+
+on:
+  schedule:
+    # 04:30 SGT = 20:30 UTC
+    - cron: "30 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  produce-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python & FFmpeg
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg && pip install edge-tts requests
+
+      - name: Produce daily Slayer broadcast (192 kbps MP3 + manifest)
+        run: |
+          mkdir -p scripts
+          if [ -f run_daily_production.py ]; then cp -f run_daily_production.py scripts/run_daily_production.py; fi
+          python3 scripts/run_daily_production.py
+
+      - name: Publish to GitHub Pages branch
+        if: success()
+        run: |
+          git config user.name "slayer-radio-bot"
+          git config user.email "slayer-radio-bot@users.noreply.github.com"
+          git add data/ audio/
+          git commit -m "Slayer broadcast $(TZ=Asia/Singapore date +%Y-%m-%d)" || exit 0
+          git push
