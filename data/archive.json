@@ -1,0 +1,254 @@
+{
+  "episodes": [
+    {
+      "date": "2026-11-28",
+      "label": "Sat, 28 Nov 2026",
+      "audioUrl": "./audio/2026-11-28.mp3",
+      "durationSec": 1943.34,
+      "segments": [
+        {
+          "id": "intro",
+          "type": "station",
+          "start": 0.0,
+          "end": 19.32,
+          "title": "Slayer Opening",
+          "kicker": "01 · OPENING",
+          "heading": "Good Morning — This is Slayer",
+          "body": "Good morning. This is Slayer, your daily 07:00 Singapore broadcast for Sat, 28 Nov 2026. Today we cover international developments, six distinct music genres, clinical psychological reinforcement, Singapore arts, and a closing reflection.",
+          "meta": [
+            {
+              "label": "Broadcast",
+              "value": "07:00 SGT"
+            }
+          ]
+        },
+        {
+          "id": "news",
+          "type": "news",
+          "start": 19.32,
+          "end": 105.84,
+          "title": "International News Bulletin",
+          "kicker": "02 · INTERNATIONAL NEWS",
+          "heading": "6 Verified Stories",
+          "body": "From BBC World: Spanish PM and rivals rally supporters in final pitch for votes. Prime Minister Pedro Sánchez wants to defy the polls, and his main rivals accuse him of not telling the truth and of \"betrayal\". From BBC World: Turkish officials 'destroyed' pro-opposition TV channel, owner tells BBC. The headquarters of Halk TV were raided ",
+          "meta": [
+            {
+              "label": "BBC World",
+              "value": "Spanish PM and rivals rally supporters in fin",
+              "url": "https://www.bbc.co.uk/news/articles/c8wy5p4gdnwvo?at_medium=RSS&at_campaign=rss"
+            },
+            {
+              "label": "BBC World",
+              "value": "Turkish officials 'destroyed' pro-opposition ",
+              "url": "https://www.bbc.co.uk/news/articles/cq36gk151xkdo?at_medium=RSS&at_campaign=rss"
+            },
+            {
+              "label": "BBC World",
+              "value": "Eight killed in Peruvian military helicopter ",
+              "url": "https://www.bbc.co.uk/news/articles/cwp9d85mlp88o?at_medium=RSS&at_campaign=rss"
+            },
+            {
+              "label": "BBC World",
+              "value": "'Poison seller' Kenneth Law apologises in cou",
+              "url": "https://www.bbc.co.uk/news/articles/cmx2898wq2qjo?at_medium=RSS&at_campaign=rss"
+            },
+            {
+              "label": "BBC World",
+              "value": "Zelensky criticises 'strange' Trump-Putin fri",
+              "url": "https://www.bbc.co.uk/news/articles/c820q9wgrpyyo?at_medium=RSS&at_campaign=rss"
+            },
+            {
+              "label": "BBC World",
+              "value": "'We couldn't give up that easily': Marching b",
+              "url": "https://www.bbc.co.uk/news/articles/ckd71ypy9e8eo?at_medium=RSS&at_campaign=rss"
+            }
+          ]
+        },
+        {
+          "id": "m1",
+          "type": "music",
+          "start": 105.84,
+          "end": 435.84,
+          "title": "Russian Folk: Sherwood Cottage, 01/09/05",
+          "kicker": "03 · MUSIC — RUSSIAN FOLK",
+          "heading": "Sherwood Cottage, 01/09/05",
+          "body": "Performed by Children of the Drone",
+          "meta": [
+            {
+              "label": "Artist",
+              "value": "Children of the Drone"
+            },
+            {
+              "label": "Archive",
+              "value": "CoTD_010905",
+              "url": "https://archive.org/details/CoTD_010905"
+            }
+          ]
+        },
+        {
+          "id": "m2",
+          "type": "music",
+          "start": 435.84,
+          "end": 765.84,
+          "title": "Bulgarian Folk: 022- 17 Hippies/ 23 Eylül 2017",
+          "kicker": "04 · MUSIC — BULGARIAN FOLK",
+          "heading": "022- 17 Hippies/ 23 Eylül 2017",
+          "body": "Performed by Ercüment Gürçay",
+          "meta": [
+            {
+              "label": "Artist",
+              "value": "Ercüment Gürçay"
+            },
+            {
+              "label": "Archive",
+              "value": "babilden-sonra_23-09-2017_rec.22-09-2017",
+              "url": "https://archive.org/details/babilden-sonra_23-09-2017_rec.22-09-2017"
+            }
+          ]
+        },
+        {
+          "id": "m3",
+          "type": "music",
+          "start": 765.84,
+          "end": 1095.84,
+          "title": "Future Rave: ASOT 1066",
+          "kicker": "05 · MUSIC — FUTURE RAVE",
+          "heading": "ASOT 1066",
+          "body": "Performed by Armin van Buuren",
+          "meta": [
+            {
+              "label": "Artist",
+              "value": "Armin van Buuren"
+            },
+            {
+              "label": "Archive",
+              "value": "asot-1066",
+              "url": "https://archive.org/details/asot-1066"
+            }
+          ]
+        },
+        {
+          "id": "m4",
+          "type": "music",
+          "start": 1095.84,
+          "end": 1425.84,
+          "title": "Neurofunk: Effect_-_Surrender_FISH013A",
+          "kicker": "06 · MUSIC — NEUROFUNK",
+          "heading": "Effect_-_Surrender_FISH013A",
+          "body": "Performed by Archive Artist",
+          "meta": [
+            {
+              "label": "Artist",
+              "value": "Archive Artist"
+            },
+            {
+              "label": "Archive",
+              "value": "Effect_-_Surrender_FISH013A",
+              "url": "https://archive.org/details/Effect_-_Surrender_FISH013A"
+            }
+          ]
+        },
+        {
+          "id": "arts",
+          "type": "events",
+          "start": 1425.84,
+          "end": 1441.46,
+          "title": "Singapore Arts & Cultural Guide",
+          "kicker": "07 · SINGAPORE ARTS",
+          "heading": "Current Exhibitions & Performances",
+          "body": "Turning to Singapore arts and cultural highlights this week. Check current programmes at Esplanade Theatres on the Bay, National Gallery Singapore, Wild Rice at Funan, and SISTIC for live classical, theatre, and visual art exhibitions.",
+          "meta": [
+            {
+              "label": "Esplanade",
+              "value": "What's On",
+              "url": "https://www.esplanade.com/whats-on"
+            },
+            {
+              "label": "National Gallery",
+              "value": "Exhibitions",
+              "url": "https://www.nationalgallery.sg/sg/en/whats-on.html"
+            }
+          ]
+        },
+        {
+          "id": "m5",
+          "type": "music",
+          "start": 1441.46,
+          "end": 1663.5,
+          "title": "Cumbia: raptor - si no regresas",
+          "kicker": "08 · MUSIC — CUMBIA",
+          "heading": "raptor - si no regresas",
+          "body": "Performed by pista raptor",
+          "meta": [
+            {
+              "label": "Artist",
+              "value": "pista raptor"
+            },
+            {
+              "label": "Archive",
+              "value": "Raptor-SiNoRegresas",
+              "url": "https://archive.org/details/Raptor-SiNoRegresas"
+            }
+          ]
+        },
+        {
+          "id": "m6",
+          "type": "music",
+          "start": 1663.5,
+          "end": 1899.1,
+          "title": "Black Metal: UNÐΞΛÐ BĿOOÐ - 2026 - Smoke, Sax & Slaughter",
+          "kicker": "09 · MUSIC — BLACK METAL",
+          "heading": "UNÐΞΛÐ BĿOOÐ - 2026 - Smoke, Sax & Slaughter",
+          "body": "Performed by UNÐΞΛÐ BĿOOÐ",
+          "meta": [
+            {
+              "label": "Artist",
+              "value": "UNÐΞΛÐ BĿOOÐ"
+            },
+            {
+              "label": "Archive",
+              "value": "undd-bl-ood-2026-smoke-sax-slaughter_202610",
+              "url": "https://archive.org/details/undd-bl-ood-2026-smoke-sax-slaughter_202610"
+            }
+          ]
+        },
+        {
+          "id": "psych",
+          "type": "psych",
+          "start": 1899.1,
+          "end": 1926.44,
+          "title": "Personal Psychological Reinforcement",
+          "kicker": "10 · CLINICAL REINFORCEMENT",
+          "heading": "ACT & Clinical Formulation Under Uncertainty & Separating Professional Performance from Personal Worth",
+          "body": "Clinical and personal reinforcement. First, ACT & Clinical Formulation Under Uncertainty: A clinical formulation is a living hypothesis rather than a rigid verdict; tolerating diagnostic ambiguity protects client-centred judgement. Second, Separating Professional Performance from Personal Worth: Difficult sessions or slow client progress ",
+          "meta": [
+            {
+              "label": "Clinical",
+              "value": "ACT & Clinical Formulation Under Uncertainty"
+            },
+            {
+              "label": "Motivational",
+              "value": "Separating Professional Performance from Personal Worth"
+            }
+          ]
+        },
+        {
+          "id": "closing",
+          "type": "closing",
+          "start": 1926.44,
+          "end": 1943.34,
+          "title": "Daily Closing Reflection",
+          "kicker": "11 · CLOSING REFLECTION",
+          "heading": "Intellectual Curiosity & Perspective",
+          "body": "Closing reflection on Intellectual Curiosity & Perspective: Carrying a beginner's curiosity into familiar routines allows seasoned expertise and fresh observation to coexist without cynicism. Thank you for listening to Slayer. Have a grounded day ahead.",
+          "meta": [
+            {
+              "label": "Theme",
+              "value": "Intellectual Curiosity & Perspective"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
