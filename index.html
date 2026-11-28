@@ -1,1 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slayer — 07:00 SGT Daily Personal Radio</title>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --surface: #141922;
+      --surface-2: #1c2330;
+      --border: #2a3342;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #e05d44;
+      --accent-soft: rgba(224, 93, 68, 0.15);
+      --teal: #38bdf8;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding: 20px 16px 60px;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .pulse {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; }
+    .subtitle { font-size: 0.85rem; color: var(--muted); }
+    .date-badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .player-card {
+      background: linear-gradient(145deg, #171d28, #11161f);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .player-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .play-btn {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .play-btn:hover { filter: brightness(1.1); }
+    .now-meta { flex: 1; min-width: 200px; }
+    .now-kicker {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .now-title { font-size: 1.12rem; font-weight: 700; margin-top: 2px; }
+    .time-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    input[type="range"] { flex: 1; accent-color: var(--accent); cursor: pointer; }
+    .vol-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+    .vol-wrap input { width: 90px; }
+    .grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; }
+    @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .card h2 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .sync-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .sync-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .sync-heading { font-size: 1.08rem; font-weight: 700; margin-bottom: 6px; }
+    .sync-body { font-size: 0.92rem; color: #c9d1d9; margin-bottom: 10px; }
+    .sync-meta { font-size: 0.82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px; }
+    .sync-meta a { color: var(--teal); text-decoration: none; }
+    .sync-meta a:hover { text-decoration: underline; }
+    .rundown { list-style: none; display: flex; flex-direction: column; gap: 6px; max-height: 440px; overflow-y: auto; }
+    .rundown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 0.86rem;
+      background: var(--surface-2);
+    }
+    .rundown-item:hover { border-color: var(--border); }
+    .rundown-item.active { border-color: var(--accent); background: var(--accent-soft); }
+    .rundown-time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.78rem; flex-shrink: 0; }
+    .archive-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .archive-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.84rem;
+    }
+    .archive-btn.active { border-color: var(--accent); color: var(--accent); }
+    .notice { margin-top: 10px; font-size: 0.78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="pulse"></div>
+        <div>
+          <h1>Slayer</h1>
+          <div class="subtitle">07:00 SGT Daily Personal Radio · News · 6-Genre Music · Clinical Reinforcement · Singapore Arts</div>
+        </div>
+      </div>
+      <div class="date-badge" id="broadcastDate">Loading...</div>
+    </header>
+
+    <section class="player-card">
+      <div class="player-top">
+        <button class="play-btn" id="playBtn" aria-label="Play or pause">▶</button>
+        <div class="now-meta">
+          <div class="now-kicker" id="nowKicker">SLAYER · 07:00 SGT</div>
+          <div class="now-title" id="nowTitle">Ready</div>
+        </div>
+        <div class="vol-wrap">
+          <span>Vol</span>
+          <input type="range" id="volRange" min="0" max="1" step="0.02" value="0.85" />
+        </div>
+      </div>
+      <div class="time-row">
+        <span id="curTime">00:00</span>
+        <input type="range" id="seekBar" min="0" max="3000" step="1" value="0" />
+        <span id="durTime">50:00</span>
+      </div>
+      <div class="notice" id="audioNotice">
+        192 kbps MP3 · Timestamp-synchronised segment display.
+      </div>
+      <audio id="audioEl" preload="metadata"></audio>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Synchronised Segment Display</h2>
+        <div class="sync-box" id="syncBox"></div>
+        <div style="margin-top: 18px;">
+          <h2>Programme Archive</h2>
+          <div class="archive-list" id="archiveList"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Programme Running Order</h2>
+        <ul class="rundown" id="rundownList"></ul>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const FALLBACK_ARCHIVE = [
+      {
+        date: "2026-11-27",
+        label: "Fri, 27 Nov 2026",
+        audioUrl: "./audio/2026-11-27.mp3",
+        durationSec: 3000,
+        segments: [
+          {
+            id: "intro", type: "station", start: 0, end: 60,
+            title: "Slayer Station Introduction",
+            kicker: "01 · OPENING",
+            heading: "Good Morning — This is Slayer (07:00 SGT)",
+            body: "Waiting for the first automated GitHub Actions broadcast build.",
+            meta: [{ label: "Broadcast Time", value: "07:00 Asia/Singapore" }]
+          }
+        ]
+      }
+    ];
+
+    let archiveData = FALLBACK_ARCHIVE;
+    let currentEp = archiveData[0];
+    let currentTime = 0;
+    let isPlaying = false;
+
+    const audioEl = document.getElementById("audioEl");
+    const playBtn = document.getElementById("playBtn");
+    const seekBar = document.getElementById("seekBar");
+    const volRange = document.getElementById("volRange");
+    const curTimeEl = document.getElementById("curTime");
+    const durTimeEl = document.getElementById("durTime");
+    const nowKicker = document.getElementById("nowKicker");
+    const nowTitle = document.getElementById("nowTitle");
+    const syncBox = document.getElementById("syncBox");
+    const rundownList = document.getElementById("rundownList");
+    const archiveList = document.getElementById("archiveList");
+    const broadcastDate = document.getElementById("broadcastDate");
+    const audioNotice = document.getElementById("audioNotice");
+
+    function fmt(sec) {
+      const s = Math.max(0, Math.floor(sec));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+    }
+
+    function getActiveSegment(t) {
+      return currentEp.segments.find(seg => t >= seg.start && t < seg.end) || currentEp.segments[currentEp.segments.length - 1];
+    }
+
+    function renderSync() {
+      const seg = getActiveSegment(currentTime);
+      nowKicker.textContent = seg.kicker;
+      nowTitle.textContent = seg.title;
+      curTimeEl.textContent = fmt(currentTime);
+      seekBar.value = Math.floor(currentTime);
+
+      const metaHtml = (seg.meta || []).map(m =>
+        m.url
+          ? `<span><strong>${m.label}:</strong> <a href="${m.url}" target="_blank" rel="noopener">${m.value} ↗</a></span>`
+          : `<span><strong>${m.label}:</strong> ${m.value}</span>`
+      ).join("");
+
+      syncBox.innerHTML = `
+        <div class="sync-tag">${seg.kicker}</div>
+        <div class="sync-heading">${seg.heading}</div>
+        <div class="sync-body">${seg.body}</div>
+        <div class="sync-meta">${metaHtml}</div>
+      `;
+
+      document.querySelectorAll(".rundown-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.id === seg.id);
+      });
+    }
+
+    function loadEpisode(ep) {
+      currentEp = ep;
+      currentTime = 0;
+      broadcastDate.textContent = ep.label;
+      seekBar.max = ep.durationSec;
+      durTimeEl.textContent = fmt(ep.durationSec);
+      audioEl.src = ep.audioUrl;
+
+      rundownList.innerHTML = ep.segments.map(seg => `
+        <li class="rundown-item" data-id="${seg.id}" data-start="${seg.start}">
+          <span>${seg.title}</span>
+          <span class="rundown-time">${fmt(seg.start)}</span>
+        </li>
+      `).join("");
+
+      rundownList.querySelectorAll(".rundown-item").forEach(el => {
+        el.addEventListener("click", () => seekTo(Number(el.dataset.start)));
+      });
+
+      archiveList.innerHTML = archiveData.map((a, idx) => `
+        <button class="archive-btn ${a.date === ep.date ? "active" : ""}" data-idx="${idx}">
+          ${a.date}
+        </button>
+      `).join("");
+
+      archiveList.querySelectorAll(".archive-btn").forEach(btn => {
+        btn.addEventListener("click", () => loadEpisode(archiveData[Number(btn.dataset.idx)]));
+      });
+
+      renderSync();
+    }
+
+    function seekTo(sec) {
+      currentTime = Math.max(0, Math.min(currentEp.durationSec, sec));
+      if (audioEl.readyState >= 1) audioEl.currentTime = currentTime;
+      renderSync();
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        audioEl.pause();
+        isPlaying = false;
+        playBtn.textContent = "▶";
+      } else {
+        audioEl.play().then(() => {
+          isPlaying = true;
+          playBtn.textContent = "❚❚";
+        }).catch(() => {
+          audioNotice.textContent = "Audio file not yet published for this date. Run the GitHub Actions workflow to generate today's 192 kbps MP3.";
+        });
+      }
+    }
+
+    playBtn.addEventListener("click", togglePlay);
+    seekBar.addEventListener("input", e => seekTo(Number(e.target.value)));
+    volRange.addEventListener("input", e => { audioEl.volume = Number(e.target.value); });
+    audioEl.addEventListener("timeupdate", () => {
+      if (!isNaN(audioEl.currentTime)) {
+        currentTime = audioEl.currentTime;
+        renderSync();
+      }
+    });
+    audioEl.addEventListener("ended", () => { isPlaying = false; playBtn.textContent = "▶"; });
+
+    fetch("./data/archive.json?_=" + Date.now())
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        if (json && Array.isArray(json.episodes) && json.episodes.length) {
+          archiveData = json.episodes;
+        }
+      })
+      .catch(() => {})
+      .finally(() => loadEpisode(archiveData[0]));
+  </script>
+</body>
+</html>
 
