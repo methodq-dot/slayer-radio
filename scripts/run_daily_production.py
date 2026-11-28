@@ -2,10 +2,10 @@
 """
 Slayer Daily Radio Production, QA & Mastering Pipeline
 - Fetches fresh international news from credible RSS feeds
-- Selects 6 legally redistributable CC/PD tracks from Internet Archive (1 per genre)
+- Selects 6 legally redistributable CC/PD tracks from Internet Archive (1 per genre, 1.5-12 MB)
 - Generates non-repeating Clinical & Motivational Psychological Reinforcement
 - Synthesizes UK English speech via Edge TTS (en-GB-RyanNeural, $0/month)
-- Masters audio with FFmpeg (-16 LUFS, smooth fades, 192 kbps MP3)
+- Masters audio with FFmpeg (-16 LUFS, smooth fades, 192 kbps MP3, < 95 MB)
 - Verifies output integrity & updates manifest, archive.json, and history_register.json
 """
 import asyncio
@@ -116,7 +116,7 @@ def fetch_archive_track(genre_slug: str, genre_name: str, query: str, used_ids: 
     params = {
         "q": query,
         "fl[]": ["identifier", "title", "creator", "licenseurl"],
-        "rows": 25,
+        "rows": 35,
         "page": 1,
         "output": "json",
     }
@@ -131,7 +131,18 @@ def fetch_archive_track(genre_slug: str, genre_name: str, query: str, used_ids: 
         if not meta_r.ok:
             continue
         files = meta_r.json().get("files", [])
-        mp3_candidates = [f for f in files if f.get("name", "").lower().endswith(".mp3") and "sample" not in f.get("name", "").lower()]
+        mp3_candidates = [
+            f for f in files
+            if f.get("name", "").lower().endswith(".mp3")
+            and "sample" not in f.get("name", "").lower()
+            and 1_500_000 <= int(f.get("size", 0) or 0) <= 12_000_000
+        ]
+        if not mp3_candidates:
+            mp3_candidates = [
+                f for f in files
+                if f.get("name", "").lower().endswith(".mp3")
+                and "sample" not in f.get("name", "").lower()
+            ]
         if not mp3_candidates:
             continue
         chosen = mp3_candidates[0]
@@ -239,15 +250,13 @@ def main():
         if len(item) == 7:
             seg_id, title, kicker, heading, body, meta, seg_type = item
             src = tts_files[seg_id]
+            ff_args = ["-i", str(src), "-af", "loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=in:st=0:d=0.5"]
         else:
             seg_id, title, kicker, heading, body, meta, seg_type, src = item
+            ff_args = ["-i", str(src), "-t", "330", "-af", "loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=in:st=0:d=0.5"]
 
         wav_out = work / f"{idx:02d}_{seg_id}.wav"
-        run_ffmpeg([
-            "-i", str(src),
-            "-af", "loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=in:st=0:d=0.5",
-            "-ar", "44100", "-ac", "2", str(wav_out),
-        ])
+        run_ffmpeg([*ff_args, "-ar", "44100", "-ac", "2", str(wav_out)])
         dur = get_duration(wav_out)
         norm_wavs.append(wav_out)
         manifest_segs.append({
@@ -262,8 +271,9 @@ def main():
     out_mp3 = AUDIO_DIR / f"{date_str}.mp3"
     run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(concat_file), "-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100", str(out_mp3)])
 
-    if not out_mp3.exists() or out_mp3.stat().st_size < 100_000:
-        sys.exit(f"QA FAIL: Output MP3 missing or too small: {out_mp3}")
+    size_mb = out_mp3.stat().st_size / (1024 * 1024)
+    if not out_mp3.exists() or size_mb < 0.1 or size_mb > 95:
+        sys.exit(f"QA FAIL: Output MP3 size {size_mb:.1f} MB out of range")
     if len(manifest_segs) < 11:
         sys.exit("QA FAIL: Expected 11 segments")
 
@@ -287,7 +297,7 @@ def main():
     history["psych_idx"] = p_idx + 1
     history["reflection_idx"] = r_idx + 1
     save_json(HISTORY_FILE, history)
-    print(f"QA PASS & Published {out_mp3} ({total_dur}s / {total_dur/60:.1f} min)")
+    print(f"QA PASS & Published {out_mp3} ({total_dur}s / {total_dur/60:.1f} min, {size_mb:.1f} MB)")
 
 
 if __name__ == "__main__":
